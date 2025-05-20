@@ -1,10 +1,27 @@
-para copilar en vs code abre la tarminal, y ejecuta el siguiente comando
+Guía para compilar programas en C usando VS Code y GCC
 
-gcc nombreArchivo.C -o NombreEjecutable.exe
+1. Abre la terminal en VS Code.
 
-y posteriormente 
+2. Compila tu archivo fuente con el siguiente comando (reemplaza `nombreArchivo.c` por el nombre real de tu archivo):
 
-.\NombreEjecutable.exe
+    gcc nombreArchivo.c -o NombreEjecutable.exe
 
+3. Ejecuta el programa compilado con:
 
--fdiagnostics-color=always -g -std=c90 -Wall -Werror -Wextra -std=c99 -Wpedantic -o
+    .\NombreEjecutable.exe
+
+Banderas recomendadas para una mejor compilación:
+
+    -fdiagnostics-color=always   # Colorea los mensajes de error
+    -g                          # Incluye información de depuración
+    -std=c99                    # Usa el estándar C99 (puedes cambiarlo a c90, c11, etc.) "ANSI C" 
+    -Wall                       # Muestra todas las advertencias
+    -Wextra                     # Muestra advertencias adicionales
+    -Werror                     # Trata las advertencias como errores
+    -Wpedantic                  # Muestra advertencias estrictas de estándar
+
+Ejemplo completo:
+
+    gcc nombreArchivo.c -o NombreEjecutable.exe -fdiagnostics-color=always -g -std=c99 -Wall -Wextra -Werror -Wpedantic
+
+¡Listo! Ahora puedes compilar y ejecutar tus programas en C fácilmente desde terminal.
