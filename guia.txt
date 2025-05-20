@@ -1,0 +1,10 @@
+para copilar en vs code abre la tarminal, y ejecuta el siguiente comando
+
+gcc nombreArchivo.C -o NombreEjecutable.exe
+
+y posteriormente 
+
+.\NombreEjecutable.exe
+
+
+-fdiagnostics-color=always -g -std=c90 -Wall -Werror -Wextra -std=c99 -Wpedantic -o

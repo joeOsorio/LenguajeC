@@ -1,0 +1,13 @@
+Rendindimiento del procesador
+
+
+Ciclos de reloj por instrucci├│n (CPI): 6000
+Frecuencia del procesador (en GHz):     3600
+Cantidad total de instrucciones ejecutadas:     3000
+Cantidad de n├║cleos:   6
+Cantidad de memoria cach├⌐ :    6000
+
+
+Tiempo de ejecuci├│n:   0.00
+N├║mero de instrucciones ejecutadas por segundo (IPS):  0.00
+Se considera obsoleto
