@@ -48,7 +48,7 @@ int main(void)
     {
         system("cls");
         mostrarTitulo();
-        opcion = menu(titulo, opciones, 2, 60, 15);
+        opcion = menu(titulo, opciones, 2, 70, 10);
         switch (opcion)
         {
         case 0:
@@ -102,12 +102,11 @@ int menu(const char *titulo, const char *opciones[], int num_opciones, int x, in
     int seleccion = 0, tecla, i;
     do
     {
-        /* system("cls"); */
         gotoxy(x, y);
         printf("%s\n", titulo);
         for (i = 0; i < num_opciones; i++)
         {
-            gotoxy(x, y + i);
+            gotoxy(x, y + 2 + i);
             if (i == seleccion)
             {
                 printf("\033[33m-> %s\033[0m\n", opciones[i]); /* Amarillo para selección */
@@ -137,102 +136,125 @@ int menu(const char *titulo, const char *opciones[], int num_opciones, int x, in
 void jugarUNO(void)
 {
     JUEGO_UNO juego;
+    CARTA carta;
+    int numJugadores, carta_idx, i, accion;
+    const char *opciones[] = {"Jugar carta", "Robar carta", "Gritar UNO!", "Salir"};
+    bool turno_activo;
+
+    /* Solicitar número de jugadores (2-4) */
+    do
+    {
+        system("cls");
+        mostrarTitulo();
+        printf("\nIngrese el número de jugadores (2-4): ");
+        scanf("%d", &numJugadores);
+    } while (numJugadores < 2 || numJugadores > MAX_JUGADORES);
+
+    /* Inicializar juego */
+    juego.numJugadores = numJugadores;
     inicializar_juego(&juego);
 
     while (1)
     {
-        const char *opciones[] = {"Jugar carta", "Robar carta", "Gritar UNO!", "Salir"};
-        int i, carta_idx, accion = menu("¿Qué deseas hacer?", opciones, 4, 15, 10 + juego.jugadores[juego.turno].cantidad);
-        system("cls");
-        mostrarTitulo();
-        /* Menú de acciones */
-
-        // Verificar si hay un ganador
-        if (juego.jugadores[juego.turno].cantidad == 0)
+        turno_activo = true;
+        while (turno_activo)
         {
-            printf("\n¡Jugador %d ha ganado!\n", juego.turno);
-            system("pause");
-            return;
-        }
+            system("cls");
+            mostrarTitulo();
 
-        // Mostrar estado del juego
-        printf("\n--- Turno del Jugador %d ---\n", juego.turno + 1);
-        printf("Cartas restantes en mazo: %d\n", juego.cartasRestantes);
-        printf("Carta en el pozo: ");
-        imprimir_carta(juego.descarte);
+            /* Mostrar estado del juego */
+            gotoxy(60, 15);
+            printf("\n--- Turno del Jugador %d ---\n", juego.turno + 1);
+            gotoxy(60, 16);
+            printf("Cartas restantes en mazo: %d\n", juego.cartasRestantes);
+            gotoxy(60, 17);
+            printf("Carta en el pozo: ");
+            imprimir_carta(juego.descarte);
 
-        // Mostrar mano del jugador actual
-        printf("\n\nTus cartas:\n");
-        for (i = 0; i < juego.jugadores[juego.turno].cantidad; i++)
-        {
-            printf("%d: ", i + 1);
-            imprimir_carta(juego.jugadores[juego.turno].mano[i]);
-            printf("\n");
-        }
-
-        switch (accion)
-        {
-        case 0:
-        { // Jugar carta
-            printf("\nIngresa el número de la carta a jugar: ");
-            scanf("%d", &carta_idx);
-            carta_idx--;
-
-            if (carta_idx >= 0 && carta_idx < juego.jugadores[juego.turno].cantidad)
+            /* Mostrar mano del jugador */
+            printf("\n\nTus cartas:\n");
+            for (i = 0; i < juego.jugadores[juego.turno].cantidad; i++)
             {
-                CARTA carta = juego.jugadores[juego.turno].mano[carta_idx];
-                if (es_jugada_valida(juego.descarte, carta))
+                printf("%d: ", i + 1);
+                imprimir_carta(juego.jugadores[juego.turno].mano[i]);
+                printf("\t");
+            }
+
+            /* Menú de acciones */
+            accion = menu("¿Qué deseas hacer?", opciones, 4, 70, 25);
+
+            switch (accion)
+            {
+            case 0: /* Jugar carta */
+                gotoxy(70, 32);
+                printf("\nIngresa el número de la carta a jugar: ");
+                scanf("%d", &carta_idx);
+                carta_idx--;
+
+                if (carta_idx >= 0 && carta_idx < juego.jugadores[juego.turno].cantidad)
                 {
-                    // Mover carta al descarte
-                    juego.descarte = carta;
-
-                    // Eliminar carta de la mano
-                    for (i = carta_idx; i < juego.jugadores[juego.turno].cantidad - 1; i++)
+                    carta = juego.jugadores[juego.turno].mano[carta_idx];
+                    if (es_jugada_valida(juego.descarte, carta))
                     {
-                        juego.jugadores[juego.turno].mano[i] = juego.jugadores[juego.turno].mano[i + 1];
-                    }
-                    juego.jugadores[juego.turno].cantidad--;
+                        /* Mover carta al descarte */
+                        juego.descarte = carta;
+                        for (i = carta_idx; i < juego.jugadores[juego.turno].cantidad - 1; i++)
+                        {
+                            juego.jugadores[juego.turno].mano[i] = juego.jugadores[juego.turno].mano[i + 1];
+                        }
+                        juego.jugadores[juego.turno].cantidad--;
 
-                    // Aplicar efecto de carta especial
-                    if (carta.color == 'N')
+                        /* Verificar victoria */
+                        if (juego.jugadores[juego.turno].cantidad == 0)
+                        {
+                            printf("\n¡Jugador %d ha ganado!\n", juego.turno + 1);
+                            system("pause");
+                            return;
+                        }
+
+                        /* Aplicar poder especial */
+                        if (carta.color == 'N')
+                        {
+                            aplicar_poder(&juego, carta);
+                        }
+
+                        siguiente_turno(&juego);
+                        turno_activo = false;
+                    }
+                    else
                     {
-                        aplicar_poder(&juego, carta);
+                        printf("\n¡Jugada inválida! La carta debe coincidir en color o número.\n");
+                        system("pause");
                     }
-
-                    siguiente_turno(&juego);
                 }
                 else
                 {
-                    printf("\n¡Jugada inválida! La carta debe coincidir en color o número.\n");
+                    printf("\n¡Número de carta inválido!\n");
                     system("pause");
                 }
-            }
-            else
-            {
-                printf("\n¡Número de carta inválido!\n");
+                break;
+
+            case 1: /* Robar carta */
+                robar_carta(&juego.jugadores[juego.turno], &juego);
+                printf("\n¡Has robado una carta!\n");
                 system("pause");
+                break;
+
+            case 2: /* Gritar UNO */
+                if (juego.jugadores[juego.turno].cantidad == 1)
+                {
+                    printf("\n¡UNO! ¡Última carta!\n");
+                }
+                else
+                {
+                    printf("\n¡Aún tienes más de una carta!\n");
+                }
+                system("pause");
+                break;
+
+            case 3: /* Salir */
+                return;
             }
-            break;
-        }
-        case 1: // Robar carta
-            robar_carta(&juego.jugadores[juego.turno], &juego);
-            printf("\n¡Has robado una carta!\n");
-            siguiente_turno(&juego);
-            system("pause");
-            break;
-        case 2: // Gritar UNO
-            if (juego.jugadores[juego.turno].cantidad == 1)
-            {
-                printf("\n¡UNO! ¡Última carta!\n");
-            }
-            else
-            {
-                printf("\n¡Aún tienes más de una carta!\n");
-            }
-            system("pause");
-            break;
-        case 3: // Salir
-            return;
         }
     }
 }

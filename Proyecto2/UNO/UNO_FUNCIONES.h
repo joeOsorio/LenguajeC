@@ -8,7 +8,7 @@
 #include <ctype.h>
 
 /* ***************************** Constantes ***************************** */
-#define MAX_CARTAS_MAZO 30
+#define MAX_CARTAS_MAZO 32
 #define MAX_CARTAS_MANO 20
 #define MAX_JUGADORES 4
 
@@ -16,7 +16,7 @@
 typedef struct
 {
     char color; /* 'R':Rojo, 'A':Azul, 'V': Verde, 'Y': Amarillo, 'N': Negro */
-    int valor;  /* 0-8 (6=+2, 7=cambio color, 8=salto) */
+    int valor;  /* 0-8 (6=+2, 7=salto, 8=cambio color) */
     /*
         R = 0-5
         A = 0-5
@@ -56,7 +56,6 @@ void siguiente_turno(JUEGO_UNO *juego);
 void imprimir_carta(CARTA carta);
 void robar_carta(JUGADOR *jugador, JUEGO_UNO *juego);
 int jugar_partida(JUEGO_UNO *juego);
-
 /* ************************* Fin de prototipos ************************* */
 
 void inicializar_juego(JUEGO_UNO *juego)
@@ -81,34 +80,41 @@ void inicializar_juego(JUEGO_UNO *juego)
 
 void crear_mazo(CARTA mazo[])
 {
-    int index = 0, i, v, c;
+    int index = 0, v, c, i;
     char colores[] = {'R', 'A', 'V', 'Y'};
 
     /* Cartas normales (0-5 por color) */
     for (c = 0; c < 4; c++)
     {
-        for (v = 0; v <= 5; v++)
+        for (v = 0; v <= 8; v++)
         {
-            mazo[index].color = colores[c];
-            mazo[index].valor = v;
-            index++;
+
+            if (v <= 5)
+            {
+                mazo[index].color = colores[c];
+                mazo[index].valor = v;
+                index++;
+            }
+            else if (v > 5)
+            {
+                for (i = 0; i < 2; i++)
+                {
+                    /* Cartas especiales (negras: +2, cambio color, salto) */
+
+                    mazo[index].color = colores[c];
+                    mazo[index].valor = 6; /* +2 */
+                    index++;
+
+                    mazo[index].color = colores[c];
+                    mazo[index].valor = 7; /* Salto */
+                    index++;
+
+                    mazo[index].color = 'N';
+                    mazo[index].valor = 8; /* Cambio color */
+                    index++;
+                }
+            }
         }
-    }
-
-    /* Cartas especiales (negras: +2, cambio color, salto) */
-    for (i = 0; i < 2; i++)
-    {
-        mazo[index].color = 'N';
-        mazo[index].valor = 6; /* +2 */
-        index++;
-
-        mazo[index].color = 'N';
-        mazo[index].valor = 7; /* Cambio color */
-        index++;
-
-        mazo[index].color = 'N';
-        mazo[index].valor = 8; /* Salto */
-        index++;
     }
 }
 
@@ -127,7 +133,7 @@ void barajar_mazo(CARTA mazo[], int tamanio)
 void repartir_cartas(JUEGO_UNO *juego)
 {
     int i, j;
-    for (j = 0; j < juego->numJugadores; j++)
+    for (j = 0; j < juego->numJugadores; j++) /* Usar numJugadores */
     {
         for (i = 0; i < 7 && juego->cartasRestantes > 0; i++)
         {
@@ -143,15 +149,10 @@ bool es_jugada_valida(CARTA descarte, CARTA carta_jugada)
 {
     /* Verificar si la carta jugada es válida según las reglas del juego */
     /* Se puede jugar si coincide el color o el valor, o si es un comodín */
-    if (descarte.color == carta_jugada.color || descarte.valor == carta_jugada.valor)
-    {
-        return true;
-    }
-    else if (carta_jugada.valor > 5) /* Comodín o carta especial */
-    {
-        return true;
-    }
-    return false;
+    return (
+        descarte.color == carta_jugada.color ||
+        descarte.valor == carta_jugada.valor ||
+        carta_jugada.color == 'N');
 }
 
 void siguiente_turno(JUEGO_UNO *juego)
@@ -160,16 +161,16 @@ void siguiente_turno(JUEGO_UNO *juego)
     int saltos = 1;
     if (juego->descarte.valor == 8)
     {
-        saltos++;                   /* Efecto de la carta "Salto" */
-        juego->descarte.valor = -1; /* Resetear para no aplicar el efecto repetidamente */
+        saltos++;
+        juego->descarte.valor = -1;
     }
 
-    /* Avanzar el turno (módulo MAX_JUGADORES  para ciclar entre jugadores) */
-    juego->turno = (juego->turno + saltos) % MAX_JUGADORES;
+    /* Usar numJugadores en lugar de MAX_JUGADORES */
+    juego->turno = (juego->turno + saltos) % juego->numJugadores;
 
-    /* Mensaje informativo */
     printf("\n--- Turno del JUGADOR %d ---\n", juego->turno + 1);
 }
+
 void imprimir_carta(CARTA carta)
 {
     /* Asignar colores ANSI*/
@@ -201,7 +202,7 @@ void imprimir_carta(CARTA carta)
     printf("%s", color_ansi);
 
     /* Mostrar valor o poder especial */
-    if (carta.color == 'N')
+    if (carta.valor >= 6)
     {
         switch (carta.valor)
         {
@@ -209,10 +210,10 @@ void imprimir_carta(CARTA carta)
             printf("+2");
             break;
         case 7:
-            printf("Cambio Color");
+            printf("Salto");
             break;
         case 8:
-            printf("Salto");
+            printf("Cambio Color");
             break;
         default:
             printf("?");
@@ -223,7 +224,6 @@ void imprimir_carta(CARTA carta)
     {
         printf("%d", carta.valor);
     }
-
     printf("\x1b[0m"); /* Resetear color */
 }
 
@@ -249,8 +249,12 @@ void aplicar_poder(JUEGO_UNO *juego, CARTA carta)
         robar_carta(&juego->jugadores[(juego->turno + 1) % juego->numJugadores], juego);
         robar_carta(&juego->jugadores[(juego->turno + 1) % juego->numJugadores], juego);
         break;
-    case 7:
-    { /* Cambio color */
+    case 7: /* Salto */
+        printf("¡Turno saltado!\n");
+        siguiente_turno(juego);
+        break;
+    case 8: /* Cambio color */
+    {
         char nuevo_color;
         do
         {
@@ -259,14 +263,9 @@ void aplicar_poder(JUEGO_UNO *juego, CARTA carta)
             nuevo_color = toupper(nuevo_color);
         } while (nuevo_color != 'R' && nuevo_color != 'A' &&
                  nuevo_color != 'V' && nuevo_color != 'Y');
-
         juego->descarte.color = nuevo_color;
         break;
     }
-    case 8: /* Salto */
-        printf("¡Turno saltado!\n");
-        siguiente_turno(juego);
-        break;
     }
 }
 
