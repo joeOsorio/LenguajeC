@@ -1,40 +1,41 @@
 {
+  "version": "2.0.0",
   "tasks": [
     {
       "type": "cppbuild",
-      "label": "C/C++: gcc.exe compilar archivo activo con banderas",
+      "label": "C/C++: Compilación con (C90 estricto)",
       "command": "C:\\Strawberry\\c\\bin\\gcc.exe",
-      // "args": [
-      //     "-fdiagnostics-color=always",
-      //     "-g",
-      //     "${file}",
-      //     "-o",
-      //     "${fileDirname}\\${fileBasenameNoExtension}.exe"
-      // ],
-
       "args": [
-        "-fdiagnostics-color=always",
-        "-g",
-        "${file}",
-        "-std=c90",
-        "-Wall",
-        "-Werror",
-        "-Wextra",
-        "-std=c99",
-        "-Wpedantic",
-        "-o",
+        "-fdiagnostics-color=always", // Habilita colores en los mensajes de error
+        "-g", // Genera información de depuración
+        "${file}", // Archivo fuente a compilar
+        "-std=c90", // Estándar C90 (ANSI C)
+        "-Wall", // Habilita todas las advertencias estándar
+        "-Werror", // Convierte advertencias en errores
+        "-Wextra", // Habilita advertencias adicionales
+        "-Wpedantic", // Exige cumplimiento estricto del estándar
+        "-Wstrict-prototypes", // Requiere prototipos completos de funciones
+        "-o", // Especifica archivo de salida
         "${fileDirname}\\${fileBasenameNoExtension}.exe"
       ],
       "options": {
-        "cwd": "${fileDirname}"
+        "cwd": "${fileDirname}" // Directorio de trabajo = directorio del archivo
       },
-      "problemMatcher": ["$gcc"],
-      "group": "build",
-      "detail": "Tarea generada por el depurador."
+      "problemMatcher": ["$gcc"], // Usa el matcher de problemas de GCC
+      "group": {
+        "kind": "build",
+        "isDefault": true // Haz esta la tarea de compilación por defecto
+      },
+      "detail": "Compilación estricta con todos los warnings habilitados (C90)",
+      "presentation": {
+        "reveal": "always", // Muestra la terminal al compilar
+        "panel": "dedicated", // Usa un panel dedicado para la salida
+        "clear": true // Limpia la salida antes de cada ejecución
+      }
     },
     {
       "type": "cppbuild",
-      "label": "C/C++: gcc.exe compilar archivo activo sin banderas",
+      "label": "C/C++: Compilación básica",
       "command": "C:\\Strawberry\\c\\bin\\gcc.exe",
       "args": [
         "-fdiagnostics-color=always",
@@ -48,8 +49,28 @@
       },
       "problemMatcher": ["$gcc"],
       "group": "build",
-      "detail": "compilador: C:\\Strawberry\\c\\bin\\gcc.exe"
+      "detail": "Compilación básica sin flags estrictos para pruebas rápidas",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "type": "shell",
+      "label": "Ejecutar programa compilado",
+      "command": "${fileDirname}\\${fileBasenameNoExtension}.exe",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "dependsOn": "C/C++: Compilación con todas las advertencias (C90 estricto)",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      },
+      "problemMatcher": []
     }
-  ],
-  "version": "2.0.0"
+  ]
 }
